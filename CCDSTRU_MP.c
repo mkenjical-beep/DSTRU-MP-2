@@ -308,7 +308,7 @@ int main() {
     setup(&state);
 	
 printf("\n===============================================================================\n");
-printf("                 CCDSTRU 3x3  BATTLE SIMULATOR\n");
+printf("                  3x3  BATTLE SIMULATOR\n");
 printf("===============================================================================\n");
 printf("Grid        : 3 x 3\n");
 printf("Input       : row col\n");
