@@ -308,34 +308,43 @@ int main(void) {
     setup(&state);
 	
 	printf("\n=====================================================================================\n");
-	printf("                       WELCOME TO CCDSTRU Project Simulator\n");
-	printf("                              Board size: 3 x 3\n");
-	printf("                          Enter moves as: row col\n");
-    printf("   The program ends when the PDF-defined over condition is reached or input ends.\n\n\n");
-    printf("================================= GAME RULES ========================================\n\n");
-	printf("STEP 1: FIRST MOVES:\n");
-	printf("       - Red places 1 piece anywhere\n");
-	printf("       - Blue places 1 piece anywhere\n\n");
-	printf("STEP 2: MAIN GAME:\n");
-	printf("       - On your turn, select a cell containing YOUR piece\n\n");
-	printf("STEP 3: SELECTING YOUR PIECE:\n");
-	printf("       -  First time you pick it: The piece stays, nothing happens\n");
-	printf("       -  Second time you pick the same piece it EXPLODES and spreads to nearby cells\n\n");
-	printf("STEP 4: WHEN A PIECE EXPLODES:\n");
-	printf("       - Red spreads: UP, LEFT, RIGHT\n");
-	printf("       - Blue spreads: DOWN, LEFT, RIGHT\n\n");
-	printf("STEP 5: PLACING NEW PIECES:\n");
-	printf("       - Empty cell: Place your piece and your piece will appear\n");
-	printf("       - Opponent's cell: Capture and place your piece\n");
-	printf("       - Your cell: Nothing happens your not allowed to stack\n\n");
-	printf("STEP 6: GAME ENDS WHEN:\n");
-	printf("       - 3 or less empty cells left on the board\n");
-	printf("       - 20 total moves have been made\n");
-	printf("       - One player has no pieces left\n\n");
-	printf("STEP 7: HOW TO WIN:\n");
-	printf("       - More pieces than opponent = YOU WIN!\n");
-	printf("       - Same number of pieces = DRAW\n\n");
-    printf("======================================================================================\n");
+printf("                       WELCOME TO CCDSTRU Project Simulator\n");
+printf("                              Board size: 3 x 3\n");
+printf("                          Enter moves as: row col\n");
+printf("   The program ends when the PDF-defined over condition is reached or input ends.\n\n");
+
+printf("================================= GAME RULES ========================================\n\n");
+
+printf("STEP 1: FIRST MOVES:\n");
+printf("  - Red places 1 piece anywhere\n");
+printf("  - Blue places 1 piece anywhere\n\n");
+
+printf("STEP 2: MAIN GAME:\n");
+printf("  - On your turn, select a cell containing YOUR piece\n\n");
+
+printf("STEP 3: SELECTING YOUR PIECE:\n");
+printf("  - First time: nothing happens\n");
+printf("  - Second time: the piece EXPLODES and spreads\n\n");
+
+printf("STEP 4: WHEN A PIECE EXPLODES:\n");
+printf("  - Red spreads: UP, LEFT, RIGHT\n");
+printf("  - Blue spreads: DOWN, LEFT, RIGHT\n\n");
+
+printf("STEP 5: PLACING NEW PIECES:\n");
+printf("  - Empty cell: place your piece\n");
+printf("  - Opponent cell: capture it\n");
+printf("  - Your cell: no stacking allowed\n\n");
+
+printf("STEP 6: GAME ENDS WHEN:\n");
+printf("  - 3 or fewer empty cells remain\n");
+printf("  - 20 total moves reached\n");
+printf("  - One player has no pieces left\n\n");
+
+printf("STEP 7: HOW TO WIN:\n");
+printf("  - More pieces = WIN\n");
+printf("  - Same pieces = DRAW\n\n");
+
+printf("=====================================================================================\n");
 
     status = 2;
     while (!state.isFinished && status == 2) {
