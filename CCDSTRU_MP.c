@@ -1,279 +1,278 @@
-
 #include <stdio.h>
 #include <stdbool.h>
 
-#define BOARD_SIZE 3
+#define GRID_SIZE 3
 
 typedef struct 
 {
-    bool good;
-    bool go;
-    bool start;
-    bool over;
-    bool found;
-    int val;
-    bool red[BOARD_SIZE + 1][BOARD_SIZE + 1];
-    bool blue[BOARD_SIZE + 1][BOARD_SIZE + 1];
-    bool seen[BOARD_SIZE + 1][BOARD_SIZE + 1];
-    bool touched[BOARD_SIZE + 1][BOARD_SIZE + 1];
-} Game_State;
+    bool valid;
+    bool turnFlag;
+    bool isInitial;
+    bool isFinished;
+    bool triggerFlag;
+    int moveCounter;
+    bool boardA[GRID_SIZE + 1][GRID_SIZE + 1];
+    bool boardB[GRID_SIZE + 1][GRID_SIZE + 1];
+    bool marked[GRID_SIZE + 1][GRID_SIZE + 1];
+    bool expanded[GRID_SIZE + 1][GRID_SIZE + 1];
+} GameInfo;
 
-bool in_bounds(int row, int col);
-void init_game(Game_State *game);
-int count_board(bool board[BOARD_SIZE + 1][BOARD_SIZE + 1]);
-int count_free_cells(Game_State *game);
-void update_over(Game_State *game);
-void remove_position(Game_State *game, int row, int col);
-void replace_position(Game_State *game, int row, int col);
-void expand_position(Game_State *game, int row, int col);
-void update_position(Game_State *game, int row, int col);
-void next_player_move(Game_State *game, int row, int col);
-void print_board(Game_State *game);
-void print_result(Game_State *game);
+bool is_inside(int r, int c);
+void setup(GameInfo *state);
+int count_grid(bool grid[GRID_SIZE + 1][GRID_SIZE + 1]);
+int count_empty_cells(GameInfo *state);
+void update_finished(GameInfo *state);
+void clear_pos(GameInfo *state, int r, int c);
+void apply_pos(GameInfo *state, int r, int c);
+void spread_pos(GameInfo *state, int r, int c);
+void update_pos(GameInfo *state, int r, int c);
+void next_move(GameInfo *state, int r, int c);
+void print_grid(GameInfo *state);
+void print_outcome(GameInfo *state);
 
-bool in_bounds(int row, int col) 
+bool is_inside(int r, int c) 
 {
-    return (row >= 1 && row <= BOARD_SIZE && col >= 1 && col <= BOARD_SIZE);
+    return (r >= 1 && r <= GRID_SIZE && c >= 1 && c <= GRID_SIZE);
 }
 
-void init_game(Game_State *game) 
+void setup(GameInfo *state) 
 {
-    int row;
-    int col;
+    int r;
+    int c;
 
-    game->good = false;
-    game->go = true;
-    game->start = true;
-    game->over = false;
-    game->found = false;
-    game->val = 0;
+    state->valid = false;
+    state->turnFlag = true;
+    state->isInitial = true;
+    state->isFinished = false;
+    state->triggerFlag = false;
+    state->moveCounter = 0;
 
-    for (row = 0; row <= BOARD_SIZE; row++) 
+    for (r = 0; r <= GRID_SIZE; r++) 
     {
-        for (col = 0; col <= BOARD_SIZE; col++) 
+        for (c = 0; c <= GRID_SIZE; c++) 
         {
-            game->red[row][col] = false;
-            game->blue[row][col] = false;
-            game->seen[row][col] = false;
-            game->touched[row][col] = false;
+            state->boardA[r][c] = false;
+            state->boardB[r][c] = false;
+            state->marked[r][c] = false;
+            state->expanded[r][c] = false;
         }
     }
 }
 
-int count_board(bool board[BOARD_SIZE + 1][BOARD_SIZE + 1]) 
+int count_grid(bool grid[GRID_SIZE + 1][GRID_SIZE + 1]) 
 {
-    int row;
-    int col;
-    int count = 0;
+    int r;
+    int c;
+    int total = 0;
 
-    for (row = 1; row <= BOARD_SIZE; row++)
+    for (r = 1; r <= GRID_SIZE; r++)
      {
-        for (col = 1; col <= BOARD_SIZE; col++) 
+        for (c = 1; c <= GRID_SIZE; c++) 
         {
-            if (board[row][col]) 
+            if (grid[r][c]) 
             {
-                count++;
+                total++;
             }
         }
     }
 
-    return count;
+    return total;
 }
 
-int count_free_cells(Game_State *game) 
+int count_empty_cells(GameInfo *state) 
 {
-    int redCount = count_board(game->red);
-    int blueCount = count_board(game->blue);
-    int occupied = redCount + blueCount;
-    int freeCells = (BOARD_SIZE * BOARD_SIZE) - occupied;
+    int countA = count_grid(state->boardA);
+    int countB = count_grid(state->boardB);
+    int occupied = countA + countB;
+    int empty = (GRID_SIZE * GRID_SIZE) - occupied;
 
-    return freeCells;
+    return empty;
 }
 
-void update_over(Game_State *game) 
+void update_finished(GameInfo *state) 
 {
-    int redCount = count_board(game->red);
-    int blueCount = count_board(game->blue);
-    int freeCells = count_free_cells(game);
-    bool one_side_left = (!game->start) &&
-                         ((redCount > 0 && blueCount == 0) ||
-                          (redCount == 0 && blueCount > 0));
+    int countA = count_grid(state->boardA);
+    int countB = count_grid(state->boardB);
+    int empty = count_empty_cells(state);
+    bool oneSide = (!state->isInitial) &&
+                   ((countA > 0 && countB == 0) ||
+                    (countA == 0 && countB > 0));
 
-    game->over = (freeCells == 3) || (game->val >= 20) || one_side_left;
+    state->isFinished = (empty == 3) || (state->moveCounter >= 20) || oneSide;
 }
 
-void remove_position(Game_State *game, int row, int col) 
+void clear_pos(GameInfo *state, int r, int c) 
 {
-    if (in_bounds(row, col)) {
-        if (game->go) {
-            game->red[row][col] = false;
+    if (is_inside(r, c)) {
+        if (state->turnFlag) {
+            state->boardA[r][c] = false;
         } else {
-            game->blue[row][col] = false;
+            state->boardB[r][c] = false;
         }
 
-        game->seen[row][col] = false;
-        game->touched[row][col] = false;
+        state->marked[r][c] = false;
+        state->expanded[r][c] = false;
     }
 }
 
-void replace_position(Game_State *game, int row, int col) 
+void apply_pos(GameInfo *state, int r, int c) 
 {
-    if (in_bounds(row, col)) 
+    if (is_inside(r, c)) 
     {
-        game->found = false;
+        state->triggerFlag = false;
 
-        if (game->go) {
-            if (game->blue[row][col]) 
+        if (state->turnFlag) {
+            if (state->boardB[r][c]) 
             {
-                game->blue[row][col] = false;
-                game->found = true;
+                state->boardB[r][c] = false;
+                state->triggerFlag = true;
             }
 
-            if (game->red[row][col]) 
+            if (state->boardA[r][c]) 
             {
-                game->found = true;
+                state->triggerFlag = true;
             }
 
-            if (!game->red[row][col]) 
+            if (!state->boardA[r][c]) 
             {
-                game->red[row][col] = true;
+                state->boardA[r][c] = true;
             }
         } else {
-            if (game->red[row][col]) 
+            if (state->boardA[r][c]) 
             {
-                game->red[row][col] = false;
-                game->found = true;
+                state->boardA[r][c] = false;
+                state->triggerFlag = true;
             }
 
-            if (game->blue[row][col]) 
+            if (state->boardB[r][c]) 
             {
-                game->found = true;
+                state->triggerFlag = true;
             }
 
-            if (!game->blue[row][col]) 
+            if (!state->boardB[r][c]) 
             {
-                game->blue[row][col] = true;
+                state->boardB[r][c] = true;
             }
         }
 
-        if (game->found && !game->seen[row][col]) 
+        if (state->triggerFlag && !state->marked[r][c]) 
         {
-            game->seen[row][col] = true;
-            game->found = false;
+            state->marked[r][c] = true;
+            state->triggerFlag = false;
         }
 
-        if (game->found && game->seen[row][col] && !game->touched[row][col]) 
+        if (state->triggerFlag && state->marked[r][c] && !state->expanded[r][c]) 
         {
-            game->touched[row][col] = true;
-            expand_position(game, row, col);
+            state->expanded[r][c] = true;
+            spread_pos(state, r, c);
         }
     }
 }
 
-void expand_position(Game_State *game, int row, int col) 
+void spread_pos(GameInfo *state, int r, int c) 
 {
-    int up = row - 1;
-    int down = row + 1;
-    int left = col - 1;
-    int right = col + 1;
+    int up = r - 1;
+    int down = r + 1;
+    int left = c - 1;
+    int right = c + 1;
 
-    remove_position(game, row, col);
+    clear_pos(state, r, c);
 
-    if (game->go) 
+    if (state->turnFlag) 
     {
-        replace_position(game, up, col);
+        apply_pos(state, up, c);
         } 
             else 
         {
-        replace_position(game, down, col);
+        apply_pos(state, down, c);
     }
 
-    replace_position(game, row, left);
-    replace_position(game, row, right);
+    apply_pos(state, r, left);
+    apply_pos(state, r, right);
 }
 
-void update_position(Game_State *game, int row, int col) 
+void update_pos(GameInfo *state, int r, int c) 
 {
-    game->good = false;
+    state->valid = false;
 
-    if (in_bounds(row, col)) {
-        if (!game->seen[row][col]) {
-            game->seen[row][col] = true;
-            game->good = !game->good;
-        } else if (game->seen[row][col] && !game->touched[row][col]) {
-            game->touched[row][col] = true;
-            expand_position(game, row, col);
+    if (is_inside(r, c)) {
+        if (!state->marked[r][c]) {
+            state->marked[r][c] = true;
+            state->valid = !state->valid;
+        } else if (state->marked[r][c] && !state->expanded[r][c]) {
+            state->expanded[r][c] = true;
+            spread_pos(state, r, c);
         }
     }
 }
 
-void next_player_move(Game_State *game, int row, int col) {
-    if (!game->over && in_bounds(row, col)) {
-        if (game->start && game->go) {
-            game->red[row][col] = true;
-            game->seen[row][col] = true;
-            game->good = true;
-        } else if (game->start && !game->go) {
-            game->blue[row][col] = true;
-            game->seen[row][col] = true;
-            game->good = true;
-        } else if (!game->start &&
-                   ((game->go && game->red[row][col]) ||
-                    (!game->go && game->blue[row][col]))) {
-            update_position(game, row, col);
-            game->good = true;
+void next_move(GameInfo *state, int r, int c) {
+    if (!state->isFinished && is_inside(r, c)) {
+        if (state->isInitial && state->turnFlag) {
+            state->boardA[r][c] = true;
+            state->marked[r][c] = true;
+            state->valid = true;
+        } else if (state->isInitial && !state->turnFlag) {
+            state->boardB[r][c] = true;
+            state->marked[r][c] = true;
+            state->valid = true;
+        } else if (!state->isInitial &&
+                   ((state->turnFlag && state->boardA[r][c]) ||
+                    (!state->turnFlag && state->boardB[r][c]))) {
+            update_pos(state, r, c);
+            state->valid = true;
         }
 
-        if (game->start) {
-            if (count_board(game->red) == 1 && count_board(game->blue) == 1) {
-                game->start = false;
+        if (state->isInitial) {
+            if (count_grid(state->boardA) == 1 && count_grid(state->boardB) == 1) {
+                state->isInitial = false;
             }
         }
 
-        if (game->good) {
-            game->good = !game->good;
-            game->go = !game->go;
-            game->val++;
+        if (state->valid) {
+            state->valid = !state->valid;
+            state->turnFlag = !state->turnFlag;
+            state->moveCounter++;
         }
 
-        update_over(game);
+        update_finished(state);
     }
 }
 
-void print_board(Game_State *game) {
-    int row;
-    int col;
-    int redCount = count_board(game->red);
-    int blueCount = count_board(game->blue);
+void print_grid(GameInfo *state) {
+    int r;
+    int c;
+    int countA = count_grid(state->boardA);
+    int countB = count_grid(state->boardB);
 
     printf("\n");
     printf("Turn: %s | Start: %s | Moves: %d | Free cells: %d\n",
-           game->go ? "Red" : "Blue",
-           game->start ? "true" : "false",
-           game->val,
-           count_free_cells(game));
-    printf("Red pieces: %d | Blue pieces: %d\n", redCount, blueCount);
+           state->turnFlag ? "Red" : "Blue",
+           state->isInitial ? "true" : "false",
+           state->moveCounter,
+           count_empty_cells(state));
+    printf("Red pieces: %d | Blue pieces: %d\n", countA, countB);
     printf("\n");
     
-    for (row = 1; row <= BOARD_SIZE; row++) {
-        if (row > 1) {
+    for (r = 1; r <= GRID_SIZE; r++) {
+        if (r > 1) {
             printf("---|---|---\n");
         }
         
-        for (col = 1; col <= BOARD_SIZE; col++) {
+        for (c = 1; c <= GRID_SIZE; c++) {
             char cell = ' ';
             
-            if (game->red[row][col] && game->blue[row][col]) {
+            if (state->boardA[r][c] && state->boardB[r][c]) {
                 cell = 'X';
-            } else if (game->red[row][col]) {
+            } else if (state->boardA[r][c]) {
                 cell = 'R';
-            } else if (game->blue[row][col]) {
+            } else if (state->boardB[r][c]) {
                 cell = 'B';
             } else {
                 cell = ' ';
             }
             printf(" %c ", cell);
-            if (col < BOARD_SIZE) {
+            if (c < GRID_SIZE) {
                 printf("|");
             }
         }
@@ -283,14 +282,14 @@ void print_board(Game_State *game) {
     printf("\n");
 }
 
-void print_result(Game_State *game) {
-    int redCount = count_board(game->red);
-    int blueCount = count_board(game->blue);
+void print_outcome(GameInfo *state) {
+    int countA = count_grid(state->boardA);
+    int countB = count_grid(state->boardB);
 
-    if (game->over) {
-        if (redCount > blueCount) {
+    if (state->isFinished) {
+        if (countA > countB) {
             printf("Game over: R WINS!\n");
-        } else if (redCount < blueCount) {
+        } else if (countA < countB) {
             printf("Game over: B WINS!\n");
         } else {
             printf("Game over: DRAW!\n");
@@ -301,12 +300,12 @@ void print_result(Game_State *game) {
 }
 
 int main(void) {
-    Game_State game;
-    int row;
-    int col;
+    GameInfo state;
+    int r;
+    int c;
     int status;
 
-    init_game(&game);
+    setup(&state);
 	
 	printf("\n=====================================================================================\n");
 	printf("                       WELCOME TO CCDSTRU Project Simulator\n");
@@ -339,23 +338,23 @@ int main(void) {
     printf("======================================================================================\n");
 
     status = 2;
-    while (!game.over && status == 2) {
-        print_board(&game);
-        printf("Move for %s: ", game.go ? "Red" : "Blue");
-        status = scanf("%d %d", &row, &col);
+    while (!state.isFinished && status == 2) {
+        print_grid(&state);
+        printf("Move for %s: ", state.turnFlag ? "Red" : "Blue");
+        status = scanf("%d %d", &r, &c);
 
         if (status == 2) {
-            if (in_bounds(row, col)) {
-                next_player_move(&game, row, col);
+            if (is_inside(r, c)) {
+                next_move(&state, r, c);
             } else {
                 printf("Invalid position. Use values from 1 to 3.\n");
             }
         }
     }
 
-    update_over(&game);
-    print_board(&game);
-    print_result(&game);
+    update_finished(&state);
+    print_grid(&state);
+    print_outcome(&state);
 
     return 0;
 }
