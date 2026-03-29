@@ -307,44 +307,45 @@ int main() {
 
     setup(&state);
 	
-	printf("\n=====================================================================================\n");
-printf("                       WELCOME TO CCDSTRU Project Simulator\n");
-printf("                              Board size: 3 x 3\n");
-printf("                          Enter moves as: row col\n");
-printf("   The program ends when the PDF-defined over condition is reached or input ends.\n\n");
+printf("\n===============================================================================\n");
+printf("                 CCDSTRU 3x3 GRID BATTLE SIMULATOR\n");
+printf("===============================================================================\n");
+printf("Grid        : 3 x 3\n");
+printf("Input       : row col\n");
+printf("Termination : Stops when game-ending condition or input ends\n\n");
 
-printf("================================= GAME RULES ========================================\n\n");
+printf("============================= SYSTEM INSTRUCTIONS =============================\n\n");
 
-printf("STEP 1: FIRST MOVES:\n");
-printf("  - Red places 1 piece anywhere\n");
-printf("  - Blue places 1 piece anywhere\n\n");
+printf(">>> PHASE 1: INITIAL DEPLOYMENT\n");
+printf("    [R] Red deploys one unit anywhere\n");
+printf("    [B] Blue deploys one unit anywhere\n\n");
 
-printf("STEP 2: MAIN GAME:\n");
-printf("  - On your turn, select a cell containing YOUR piece\n\n");
+printf(">>> PHASE 2: PLAYER ACTION\n");
+printf("    Select a coordinate containing YOUR unit\n\n");
 
-printf("STEP 3: SELECTING YOUR PIECE:\n");
-printf("  - First time: nothing happens\n");
-printf("  - Second time: the piece EXPLODES and spreads\n\n");
+printf(">>> PHASE 3: UNIT TRIGGER\n");
+printf("    First selection  -> unit stays idle\n");
+printf("    Second selection -> unit ACTIVATES (explosion)\n\n");
 
-printf("STEP 4: WHEN A PIECE EXPLODES:\n");
-printf("  - Red spreads: UP, LEFT, RIGHT\n");
-printf("  - Blue spreads: DOWN, LEFT, RIGHT\n\n");
+printf(">>> PHASE 4: EXPANSION LOGIC\n");
+printf("    Red  expands to: UP, LEFT, RIGHT\n");
+printf("    Blue expands to: DOWN, LEFT, RIGHT\n\n");
 
-printf("STEP 5: PLACING NEW PIECES:\n");
-printf("  - Empty cell: place your piece\n");
-printf("  - Opponent cell: capture it\n");
-printf("  - Your cell: no stacking allowed\n\n");
+printf(">>> PHASE 5: CELL RESOLUTION\n");
+printf("    Empty cell     -> occupied by your unit\n");
+printf("    Enemy cell     -> converted to your unit\n");
+printf("    Allied cell    -> no effect (stacking disabled)\n\n");
 
-printf("STEP 6: GAME ENDS WHEN:\n");
-printf("  - 3 or fewer empty cells remain\n");
-printf("  - 20 total moves reached\n");
-printf("  - One player has no pieces left\n\n");
+printf(">>> PHASE 6: TERMINATION CHECK\n");
+printf("    * 3 or fewer empty cells remain\n");
+printf("    * Move counter reaches 20\n");
+printf("    * One player has no remaining units\n\n");
 
-printf("STEP 7: HOW TO WIN:\n");
-printf("  - More pieces = WIN\n");
-printf("  - Same pieces = DRAW\n\n");
+printf(">>> PHASE 7: RESULT EVALUATION\n");
+printf("    Higher unit count -> WINNER\n");
+printf("    Equal unit count  -> DRAW\n\n");
 
-printf("=====================================================================================\n");
+printf("===============================================================================\n");
 
     status = 2;
     while (!state.isFinished && status == 2) {
