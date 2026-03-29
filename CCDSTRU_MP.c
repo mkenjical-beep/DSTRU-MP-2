@@ -299,7 +299,7 @@ void print_outcome(GameInfo *state) {
     }
 }
 
-int main(void) {
+int main() {
     GameInfo state;
     int r;
     int c;
